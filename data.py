@@ -322,7 +322,7 @@ def prepare_dataset_tfrecord(
         img = tf.reshape(img, shape=(112, 112, 3))
         img = tf.cast(img, dtype=tf.float32)
         img = random_process_image.process(img)
-        label = tf.cast(example['label'], dtype=tf.int32)
+        label = tf.one_hot(example['label'], depth=85742, dtype=tf.int32)
         return img, label
 
     ds = ds.shuffle(buffer_size=total_images).repeat()
