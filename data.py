@@ -334,7 +334,6 @@ def prepare_dataset_tfrecord(
     ds = ds.prefetch(buffer_size=AUTOTUNE)
 
     steps_per_epoch = int(np.floor(total_images / float(batch_size)))
-    
     return ds, steps_per_epoch
 
 
