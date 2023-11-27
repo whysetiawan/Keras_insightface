@@ -25,8 +25,7 @@ def pre_process_tfrecord(dataset):
         print(">>>> [Error] tfrecord dataset is None")
     
     classes, total_images = [], 0
-    progress = tqdm(dataset.as_numpy_iterator())
-    for (_, label) in progress:
+    for (_, label) in tqdm(dataset.as_numpy_iterator()):
         classes.append(label)
         total_images = total_images + 1
 
