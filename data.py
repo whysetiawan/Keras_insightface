@@ -25,7 +25,8 @@ def pre_process_tfrecord(dataset):
         print(">>>> [Error] tfrecord dataset is None")
     
     classes, total_images = [], 0
-    for (_, label) in tqdm(dataset.as_numpy_iterator()):
+    pbar = tqdm(dataset.as_numpy_iterator())
+    for (_, label) in pbar:
         classes.append(label)
         total_images = total_images + 1
 
@@ -322,8 +323,6 @@ def prepare_dataset_tfrecord(
     }
     filenames = tf.data.TFRecordDataset.list_files(data_path)
     ds = tf.data.TFRecordDataset(filenames, num_parallel_reads=AUTOTUNE)
-    classes, total_images = pre_process_tfrecord(ds)
-
     random_process_image = RandomProcessImage(
         img_shape,
         random_status,
@@ -339,6 +338,8 @@ def prepare_dataset_tfrecord(
         return img, label
     ds = ds.shuffle(buffer_size=batch_size).repeat()
     ds = ds.map(parse_tfrecord_fn, num_parallel_calls=AUTOTUNE)
+    classes, total_images = pre_process_tfrecord(ds)
+
     ds = ds.batch(batch_size, drop_remainder=True)
     ds = ds.map(lambda xx, yy: ((xx - 127.5) * 0.0078125, yy))
     ds = ds.prefetch(buffer_size=AUTOTUNE)
