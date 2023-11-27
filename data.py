@@ -323,8 +323,10 @@ def prepare_dataset_tfrecord(
         img = tf.cast(img, dtype=tf.float32)
         img = random_process_image.process(img)
         label = tf.cast(example['label'], dtype=tf.int32)
-        return img, ([], label)
+        return img, label
 
+    print("SHAPEEE")
+    print(tf.shape(ds))
     ds = ds.shuffle(buffer_size=total_images).repeat()
     ds = ds.map(parse_tfrecord_fn, num_parallel_calls=AUTOTUNE)
     ds = ds.batch(batch_size, drop_remainder=True)
@@ -332,6 +334,7 @@ def prepare_dataset_tfrecord(
     ds = ds.prefetch(buffer_size=AUTOTUNE)
 
     steps_per_epoch = int(np.floor(total_images / float(batch_size)))
+    
     return ds, steps_per_epoch
 
 
