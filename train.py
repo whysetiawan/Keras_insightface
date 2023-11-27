@@ -183,6 +183,8 @@ class Train:
         else:
             print(">>>> Init softmax dataset...")
             if self.data_path.endswith(".tfrecord"):
+                print(
+                    f"Datasets is tfrecord, is_distill_ds : {self.is_distill_ds}")
                 if self.is_distill_ds:
                     self.train_ds, self.steps_per_epoch = data.prepare_distill_dataset_tfrecord(**dataset_params)
                 else:
