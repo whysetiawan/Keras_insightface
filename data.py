@@ -454,11 +454,11 @@ def prepare_distill_dataset_tfrecord(data_path, batch_size=128, img_shape=(112, 
     ds = ds.batch(batch_size, drop_remainder=True)
     ds = ds.map(lambda xx, yy: ((xx - 127.5) * 0.0078125, yy))
     ds = ds.prefetch(buffer_size=AUTOTUNE)
-    def check_ds_value(x, y):
+
+    for (x, y) in ds.take(1):
         print("CHECKING DS VALUE")
         print(x, y)
-        return x, y
-    ds = ds.map(check_ds_value)
+        
     steps_per_epoch = int(np.floor(total / float(batch_size)))
     return ds, steps_per_epoch
 
