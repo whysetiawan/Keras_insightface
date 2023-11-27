@@ -186,6 +186,7 @@ class Train:
                 if self.is_distill_ds:
                     self.train_ds, self.steps_per_epoch = data.prepare_distill_dataset_tfrecord(**dataset_params)
                 else:
+                    print(">>>> Preparing tfrecord without teacher")
                     self.train_ds, self.steps_per_epoch = data.prepare_dataset_tfrecord(**dataset_params, partial_fc_split=self.partial_fc_split)
             else:
                 self.train_ds, self.steps_per_epoch = data.prepare_dataset(**dataset_params, partial_fc_split=self.partial_fc_split)
