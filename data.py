@@ -309,7 +309,7 @@ def prepare_dataset_tfrecord(
     }
     filenames = tf.data.TFRecordDataset.list_files(data_path)
     ds = tf.data.TFRecordDataset(filenames, num_parallel_reads=AUTOTUNE)
-    total_images = 0
+    total_images = 5822653
     # for _ in tqdm(ds.as_numpy_iterator()):
     #     total_images += 1
     print(">>>> [Base info] total images:", total_images)
@@ -331,7 +331,7 @@ def prepare_dataset_tfrecord(
     ds = ds.map(lambda xx, yy: ((xx - 127.5) * 0.0078125, yy))
     ds = ds.prefetch(buffer_size=AUTOTUNE)
 
-    steps_per_epoch = int(np.floor(5822653 / float(batch_size)))
+    steps_per_epoch = int(np.floor(total_images / float(batch_size)))
     return ds, steps_per_epoch
 
 
