@@ -325,8 +325,6 @@ def prepare_dataset_tfrecord(
         label = tf.cast(example['label'], dtype=tf.int32)
         return img, label
 
-    print("SHAPEEE")
-    print(tf.shape(ds))
     ds = ds.shuffle(buffer_size=total_images).repeat()
     ds = ds.map(parse_tfrecord_fn, num_parallel_calls=AUTOTUNE)
     ds = ds.batch(batch_size, drop_remainder=True)
