@@ -20,18 +20,6 @@ class ImageClassesRule_map:
         raw_image_class = os.path.basename(os.path.dirname(image_name))
         return self.classes_2_indices[raw_image_class]
 
-def pre_process_tfrecord(dataset, feature_desc):
-    if dataset is None:
-        print(">>>> [Error] tfrecord dataset is None")
-    
-    total_images = 0
-    pbar = tqdm(dataset.as_numpy_iterator())
-    for _ in pbar:
-        total_images = total_images + 1
-
-    print(f">>>>> After preprocess tfrecord total_images: {total_images}")
-    return total_images
-
 def pre_process_folder(data_path, image_names_reg=None, image_classes_rule=None):
     while data_path.endswith(os.sep):
         data_path = data_path[:-1]
@@ -321,7 +309,12 @@ def prepare_dataset_tfrecord(
     }
     filenames = tf.data.TFRecordDataset.list_files(data_path)
     ds = tf.data.TFRecordDataset(filenames, num_parallel_reads=AUTOTUNE)
-    total_images = pre_process_tfrecord(ds)
+
+    total_images = 0
+    for _ in tqdm(ds.as_numpy_iterator()):
+        total_images += 1
+
+    print(">>>> [Base info] total_images:", total_images)
 
     random_process_image = RandomProcessImage(
         img_shape,
