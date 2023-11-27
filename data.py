@@ -24,16 +24,13 @@ def pre_process_tfrecord(dataset, feature_desc):
     if dataset is None:
         print(">>>> [Error] tfrecord dataset is None")
     
-    classes, total_images = [], 0
-    for example in tqdm(dataset.as_numpy_iterator()):
-        example = tf.io.parse_single_example(example, feature_desc)
-        label = tf.cast(example['label'], dtype=tf.int32)
-        classes.append(label)
+    total_images = 0
+    pbar = tqdm(dataset.as_numpy_iterator())
+    for _ in pbar:
         total_images = total_images + 1
 
-    classes, total_classes = np.unique(np.asarray(classes), return_count=True)
-    print(f">>>>> After preprocess tfrecord total_images: {total_images}, image_classes: {total_classes}")
-    return classes, total_images
+    print(f">>>>> After preprocess tfrecord total_images: {total_images}")
+    return total_images
 
 def pre_process_folder(data_path, image_names_reg=None, image_classes_rule=None):
     while data_path.endswith(os.sep):
@@ -324,7 +321,7 @@ def prepare_dataset_tfrecord(
     }
     filenames = tf.data.TFRecordDataset.list_files(data_path)
     ds = tf.data.TFRecordDataset(filenames, num_parallel_reads=AUTOTUNE)
-    classes, total_images = pre_process_tfrecord(ds)
+    total_images = pre_process_tfrecord(ds)
 
     random_process_image = RandomProcessImage(
         img_shape,
@@ -339,6 +336,7 @@ def prepare_dataset_tfrecord(
         img = random_process_image.process(img)
         label = tf.cast(example['label'], dtype=tf.int32)
         return img, label
+    
     ds = ds.shuffle(buffer_size=batch_size).repeat()
     ds = ds.map(parse_tfrecord_fn, num_parallel_calls=AUTOTUNE)
     ds = ds.batch(batch_size, drop_remainder=True)
