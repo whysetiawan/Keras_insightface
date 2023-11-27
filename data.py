@@ -56,6 +56,7 @@ def pre_process_folder(data_path, image_names_reg=None, image_classes_rule=None)
         np.savez_compressed(dest_pickle, image_names=image_names, image_classes=image_classes)
         image_names, image_classes = np.array(image_names), np.array(image_classes)
     classes = np.max(image_classes) + 1 if len(image_classes) > 0 else 0
+    print(f">>>>> After preprocess folder Image_names: {len(image_names)}, image_classes: {len(image_classes)}, embeddings: {embeddings}, classes: {classes}, dest_pickle: {dest_pickle}")
     return image_names, image_classes, embeddings, classes, dest_pickle
 
 
