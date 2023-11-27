@@ -310,9 +310,14 @@ def prepare_dataset_tfrecord(
     filenames = tf.data.TFRecordDataset.list_files(data_path)
     ds = tf.data.TFRecordDataset(filenames, num_parallel_reads=AUTOTUNE)
     total_images = 5822653
-    # for _ in tqdm(ds.as_numpy_iterator()):
-    #     total_images += 1
-    print(">>>> [Base info] total images:", total_images)
+    classes = list()
+    # for example in tqdm(ds.as_numpy_iterator()):
+    #     example = tf.io.parse_single_example(example, feature_description)
+    #     y = tf.cast(example['label'], dtype=tf.int32)
+    #     classes.append(y.numpy())
+    
+    # classes = np.unique(classes)
+    print(">>>> [Base info] total images:", total_images, "total classes:", len(classes))
     random_process_image = RandomProcessImage(
         img_shape, random_status, random_crop)
 
