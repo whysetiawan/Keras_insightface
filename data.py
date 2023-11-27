@@ -31,7 +31,7 @@ def pre_process_tfrecord(dataset):
         total_images = total_images + 1
 
     classes, total_classes = np.unique(np.asarray(classes), return_count=True)
-    print(f">>>>> After preprocess folder total_images: {total_images}, image_classes: {total_classes}")
+    print(f">>>>> After preprocess tfrecord total_images: {total_images}, image_classes: {total_classes}")
     return classes, total_images
 
 def pre_process_folder(data_path, image_names_reg=None, image_classes_rule=None):
@@ -324,7 +324,29 @@ def prepare_dataset_tfrecord(
     filenames = tf.data.TFRecordDataset.list_files(data_path)
     ds = tf.data.TFRecordDataset(filenames, num_parallel_reads=AUTOTUNE)
     classes, total_images = pre_process_tfrecord(ds)
-    
+
+    random_process_image = RandomProcessImage(
+        img_shape,
+        random_status,
+        random_crop,
+    )
+    def parse_tfrecord_fn(example):
+        example = tf.io.parse_single_example(example, feature_description)
+        img = tf.io.decode_jpeg(example["image_raw"])
+        img = tf.reshape(img, shape=(112, 112, 3))
+        img = tf.cast(img, dtype=tf.float32)
+        img = random_process_image.process(img)
+        label = tf.cast(example['label'], dtype=tf.int32)
+        return img, label
+    ds = ds.shuffle(buffer_size=batch_size).repeat()
+    ds = ds.map(parse_tfrecord_fn, num_parallel_calls=AUTOTUNE)
+    ds = ds.batch(batch_size, drop_remainder=True)
+    ds = ds.map(lambda xx, yy: ((xx - 127.5) * 0.0078125, yy))
+    ds = ds.prefetch(buffer_size=AUTOTUNE)
+
+    steps_per_epoch = int(np.floor(total_images / float(batch_size)))
+
+    return ds, steps_per_epoch
 
 
 def prepare_dataset(
