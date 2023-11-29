@@ -391,8 +391,7 @@ class Train:
         if not hasattr(cur_optimizer, "_variables") and hasattr(cur_optimizer, "_optimizer") and hasattr(cur_optimizer._optimizer, "_variables"):
             # Bypassing TF 2.11 error AttributeError: 'LossScaleOptimizerV3' object has no attribute '_variables'
             # setattr(self.model.optimizer, "_variables", self.model.optimizer._optimizer._variables)
-            setattr(self.model.optimizer, 'variables',
-                    self.model.optimizer._optimizer.variables)
+            setattr(self.model.optimizer, 'variables', self.model.optimizer._optimizer.variables)
         self.model.fit(
             self.train_ds,
             epochs=epochs,
