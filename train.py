@@ -48,13 +48,14 @@ class Train:
         sam_rho=0,
         vpl_start_iters=-1,  # Enable by setting value > 0, like 8000. https://openaccess.thecvf.com/content/CVPR2021/papers/Deng_Variational_Prototype_Learning_for_Deep_Face_Recognition_CVPR_2021_paper.pdf
         vpl_allowed_delta=200,
+        steps_per_execution=1
     ):
         from inspect import getmembers, isfunction, isclass
 
         custom_objects.update(dict([ii for ii in getmembers(losses) if isfunction(ii[1]) or isclass(ii[1])]))
         custom_objects.update({"NormDense": models.NormDense})
 
-        self.model, self.basic_model, self.save_path, self.inited_from_model, self.sam_rho, self.pretrained = None, None, save_path, False, sam_rho, pretrained
+        self.model, self.basic_model, self.save_path, self.inited_from_model, self.sam_rho, self.pretrained, self.steps_per_execution = None, None, save_path, False, sam_rho, pretrained, steps_per_execution
         self.vpl_start_iters, self.vpl_allowed_delta = vpl_start_iters, vpl_allowed_delta
         if model is None and basic_model is None:
             model = os.path.join("checkpoints", save_path)
@@ -383,45 +384,26 @@ class Train:
         return emb_loss_names, emb_loss_weights
 
     def __basic_train__(self, epochs, initial_epoch=0):
-        if tf.distribute.has_strategy():
-            strategy = tf.distribute.get_strategy()
-            with strategy.scope():
-                print(">>>> Compiling with strategy")
-                self.model.compile(optimizer=self.optimizer, loss=self.cur_loss, metrics=self.metrics, loss_weights=self.loss_weights)
-                cur_optimizer = self.model.optimizer
-                if not hasattr(cur_optimizer, "_variables") and hasattr(cur_optimizer, "_optimizer") and hasattr(cur_optimizer._optimizer, "_variables"):
-                    # Bypassing TF 2.11 error AttributeError: 'LossScaleOptimizerV3' object has no attribute '_variables'
-                    # setattr(self.model.optimizer, "_variables", self.model.optimizer._optimizer._variables)
-                    setattr(self.model.optimizer, 'variables', self.model.optimizer._optimizer.variables)
-                self.model.fit(
-                    self.train_ds,
-                    epochs=epochs,
-                    verbose=1,
-                    callbacks=self.callbacks,
-                    initial_epoch=initial_epoch,
-                    steps_per_epoch=self.steps_per_epoch,
-                    # steps_per_epoch=0,
-                    use_multiprocessing=True,
-                    workers=4,
-                )
-        else :
-            self.model.compile(optimizer=self.optimizer, loss=self.cur_loss, metrics=self.metrics, loss_weights=self.loss_weights)
-            cur_optimizer = self.model.optimizer
-            if not hasattr(cur_optimizer, "_variables") and hasattr(cur_optimizer, "_optimizer") and hasattr(cur_optimizer._optimizer, "_variables"):
-                # Bypassing TF 2.11 error AttributeError: 'LossScaleOptimizerV3' object has no attribute '_variables'
-                # setattr(self.model.optimizer, "_variables", self.model.optimizer._optimizer._variables)
-                setattr(self.model.optimizer, 'variables', self.model.optimizer._optimizer.variables)
-            self.model.fit(
-                self.train_ds,
-                epochs=epochs,
-                verbose=1,
-                callbacks=self.callbacks,
-                initial_epoch=initial_epoch,
-                steps_per_epoch=self.steps_per_epoch,
-                # steps_per_epoch=0,
-                use_multiprocessing=True,
-                workers=4,
-            )
+        self.model.compile(optimizer=self.optimizer, loss=self.cur_loss,
+                        metrics=self.metrics, loss_weights=self.loss_weights,
+                        steps_per_execution=self.steps_per_execution)
+        cur_optimizer = self.model.optimizer
+        if not hasattr(cur_optimizer, "_variables") and hasattr(cur_optimizer, "_optimizer") and hasattr(cur_optimizer._optimizer, "_variables"):
+            # Bypassing TF 2.11 error AttributeError: 'LossScaleOptimizerV3' object has no attribute '_variables'
+            # setattr(self.model.optimizer, "_variables", self.model.optimizer._optimizer._variables)
+            setattr(self.model.optimizer, 'variables',
+                    self.model.optimizer._optimizer.variables)
+        self.model.fit(
+            self.train_ds,
+            epochs=epochs,
+            verbose=1,
+            callbacks=self.callbacks,
+            initial_epoch=initial_epoch,
+            steps_per_epoch=self.steps_per_epoch,
+            # steps_per_epoch=0,
+            use_multiprocessing=True,
+            workers=4,
+        )
 
     def reset_dataset(self, data_path=None):
         self.train_ds = None
