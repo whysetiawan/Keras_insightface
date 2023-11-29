@@ -323,16 +323,30 @@ def prepare_dataset_tfrecord(
 
     def parse_tfrecord_fn(example):
         example = tf.io.parse_single_example(example, feature_description)
-        img = tf.io.decode_jpeg(example["image_raw"])
+        return example["image_raw"], example["label"]
+    
+    ds = ds.map(parse_tfrecord_fn, num_parallel_calls=AUTOTUNE)
+
+
+    total_images = 0
+    classes = list()
+    for (_, label) in ds.as_numpy_iterator():
+        total_images += 1
+        classes.append(label)
+
+    num_classes = np.unique(classes)
+    print(">>>> [Base info] total images:", total_images, "total classes:", len(classes))
+
+    def decode_fn(img, label):
+        img = tf.io.decode_jpeg(img)
         img = tf.reshape(img, shape=(112, 112, 3))
         img = tf.cast(img, dtype=tf.float32)
         img = random_process_image.process(img)
-        label = tf.one_hot(example['label'], depth=85742, dtype=tf.int32)
-        return img, label
+        label = tf.one_hot(label, depth=num_classes, dtype=tf.int32)
 
     ds = ds.shuffle(buffer_size=total_images).repeat()
-    ds = ds.map(parse_tfrecord_fn, num_parallel_calls=AUTOTUNE)
     ds = ds.batch(batch_size, drop_remainder=True)
+    ds = ds.map(decode_fn)
     ds = ds.map(lambda xx, yy: ((xx - 127.5) * 0.0078125, yy))
     ds = ds.prefetch(buffer_size=AUTOTUNE)
 

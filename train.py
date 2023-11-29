@@ -201,7 +201,6 @@ class Train:
             self.train_ds = self.train_ds.with_options(self.data_options)
 
         label_spec = self.train_ds.element_spec[-1]
-        print(f"LABEL SPEC {label_spec}")
         if isinstance(label_spec, tuple):
             # dataset with embedding values
             self.is_distill_ds = True
