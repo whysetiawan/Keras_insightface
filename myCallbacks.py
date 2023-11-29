@@ -253,12 +253,12 @@ def constant_scheduler(epoch, lr_base, lr_decay_steps, decay_rate=0.1, warmup_st
 
 
 def basic_callbacks(checkpoint="keras_checkpoints.h5", evals=[], lr=0.001, lr_decay=0.05, lr_min=0, lr_decay_steps=0, lr_warmup_steps=0):
-    # checkpoint_base = "checkpoints"
-    # if not os.path.exists(checkpoint_base):
-    #     os.mkdir(checkpoint_base)
-    # checkpoint = os.path.join(checkpoint_base, checkpoint)
+    checkpoint_base = "checkpoints"
+    if not os.path.exists(checkpoint_base):
+        os.mkdir(checkpoint_base)
+    checkpoint = os.path.join(checkpoint_base, checkpoint)
     # model_checkpoint = ModelCheckpoint(checkpoint, verbose=1, save_weights_only=True)
-    # model_checkpoint = ModelCheckpoint(checkpoint, verbose=1)
+    model_checkpoint = ModelCheckpoint(checkpoint, verbose=1)
     # model_checkpoint = keras.callbacks.experimental.BackupAndRestore(checkpoint_base)
 
     if isinstance(lr_decay_steps, list):
@@ -272,4 +272,4 @@ def basic_callbacks(checkpoint="keras_checkpoints.h5", evals=[], lr=0.001, lr_de
         lr_scheduler = LearningRateScheduler(lambda epoch: exp_scheduler(epoch, lr, lr_decay, lr_min, warmup_steps=lr_warmup_steps))
     my_history = My_history(os.path.splitext(checkpoint)[0] + "_hist.json", evals=evals)
     # tensor_board_log = keras.callbacks.TensorBoard(log_dir=os.path.splitext(checkpoint)[0] + '_logs')
-    return [my_history, lr_scheduler, Gently_stop_callback()]
+    return [my_history, model_checkpoint, lr_scheduler, Gently_stop_callback()]
