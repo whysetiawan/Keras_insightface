@@ -322,12 +322,17 @@ def prepare_dataset_tfrecord(
 
     total_images = 0
     classes = list()
+
+    image_dict = {}
+
     for (_, label) in ds.as_numpy_iterator():
+        
         total_images += 1
-        classes.append(label)
+        image_dict[label] = image_dict.get(label, 0)
 
     num_classes = np.unique(classes)
-    print(">>>> [Base info] total images:", total_images, "total classes:", len(classes))
+    print(">>>> [Base info] total images:", total_images,
+          "total classes:", len(image_dict))
 
     def decode_fn(img, label):
         img = tf.io.decode_jpeg(img)
