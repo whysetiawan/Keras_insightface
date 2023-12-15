@@ -59,7 +59,7 @@ class eval_callback(tf.keras.callbacks.Callback):
     def __do_predict_distribute__(self):
         embs = []
         for img_batch in tqdm(self.ds, "Evaluating " + self.test_names, total=self.steps):
-            emb = self.strategy.run(self.basic_model, args=(img_batch,)).values
+            emb = self.basic_model.predict(img_batch)
             emb = tf.concat(emb, axis=0)
             if self.flip:
                 emb_f = self.strategy.run(lambda xx: self.basic_model(tf.image.flip_left_right(xx)), args=(img_batch,)).values
@@ -202,6 +202,7 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
         best_threshold_index = np.argmax(acc_train)
         for threshold_idx, threshold in enumerate(thresholds):
             tprs[fold_idx, threshold_idx], fprs[fold_idx, threshold_idx], _ = calculate_accuracy(threshold, dist[test_set], actual_issame[test_set])
+
         _, _, accuracy[fold_idx] = calculate_accuracy(thresholds[best_threshold_index], dist[test_set], actual_issame[test_set])
 
     tpr = np.mean(tprs, 0)
